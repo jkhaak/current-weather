@@ -1,0 +1,6 @@
+- rest:
+    id: restf271
+    post:
+      - id: poste7e0
+        path: process
+        to: direct:fetchWeatherData
