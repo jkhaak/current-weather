@@ -8,13 +8,11 @@
       parameters:
         name: fetchWeatherData
       steps:
-        - to:
-            id: to469a
-            disabled: false
-            uri: kamelet:http-sink
+        - poll:
+            id: to5eff
+            uri: https
             parameters:
-              method: GET
-              url: api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true
+              httpUri: https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true
         - log:
             id: log12e0
             message: body
