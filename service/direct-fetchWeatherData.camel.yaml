@@ -21,46 +21,77 @@
               simple:
                 id: simpleddc2
                 expression: ${body}
-        - log:
-            id: logfe3b
-            note: Log query data
-            message: Name is ${variable.queryObject[name]} and city is ${variable.queryObject[city]}
-            loggingLevel: INFO
-            logLanguage: simple
-        - removeHeaders:
-            id: removeQueryHeaders
-            pattern: "*"
-        - toD:
-            id: toDynamicGeocoding
-            uri: https://geocoding-api.open-meteo.com/v1/search?name=${variable.queryObject[city]}&count=10&language=en&format=json
-        - setVariable:
-            id: setVariableGeoData
-            name: geoData
-            expression:
-              jq:
-                id: jq747a
-                expression: ".results[0] | {city: .name, latitude, longitude}"
-        - removeHeaders:
-            id: removeGeoDataHeaders
-            pattern: "*"
-        - log:
-            id: logForecastQuery
-            note: Log forecast query location
-            message: "Querying '${jq(variable:geoData, .city)}' (lat: ${jq(variable:geoData, .latitude)}, lon: ${jq(variable:geoData, .longitude)})"
-            loggingLevel: INFO
-            logLanguage: simple
-        - toD:
-            id: toDynamicForecast
-            uri: https://api.open-meteo.com/v1/forecast?latitude=${jq(variable:geoData,.latitude)}&longitude=${jq(variable:geoData,.longitude)}&current_weather=true
-        - setVariable:
-            id: setVariableForecast
-            name: forecast
-            expression:
-              jq:
-                id: jq497e
-                expression: ".current_weather | { currentTemperature: .temperature, time }"
-        - to:
-            id: createResponse
-            uri: velocity
-            parameters:
-              resourceUri: response.vm
+        - choice:
+            id: choice8c9c
+            when:
+              - id: whenc7b3
+                expression:
+                  simple:
+                    id: simplee2b0
+                    expression: ${variable.queryObject[name]} != null && ${variable.queryObject[city]} != null
+                steps:
+                  - log:
+                      id: logfe3b
+                      note: Log query data
+                      message: Name is ${variable.queryObject[name]} and city is ${variable.queryObject[city]}
+                      loggingLevel: INFO
+                      logLanguage: simple
+                  - removeHeaders:
+                      id: removeQueryHeaders
+                      pattern: "*"
+                  - toD:
+                      id: toDynamicGeocoding
+                      uri: https://geocoding-api.open-meteo.com/v1/search?name=${variable.queryObject[city]}&count=10&language=en&format=json
+                  - setVariable:
+                      id: setVariableGeoData
+                      name: geoData
+                      expression:
+                        jq:
+                          id: jq747a
+                          expression: ".results[0] | {city: .name, latitude, longitude}"
+                  - removeHeaders:
+                      id: removeGeoDataHeaders
+                      pattern: "*"
+                  - log:
+                      id: logForecastQuery
+                      note: Log forecast query location
+                      message: "Querying '${jq(variable:geoData, .city)}' (lat: ${jq(variable:geoData, .latitude)}, lon: ${jq(variable:geoData, .longitude)})"
+                      loggingLevel: INFO
+                      logLanguage: simple
+                  - toD:
+                      id: toDynamicForecast
+                      uri: >-
+                        https://api.open-meteo.com/v1/forecast?latitude=${jq(variable:geoData,.latitude)}&longitude=${jq(variable:geoData,.longitude)}&current_weather=true
+                  - setVariable:
+                      id: setVariableForecast
+                      name: forecast
+                      expression:
+                        jq:
+                          id: jq497e
+                          expression: ".current_weather | { currentTemperature: .temperature, time }"
+                  - to:
+                      id: createResponse
+                      uri: velocity
+                      parameters:
+                        resourceUri: response.vm
+            otherwise:
+              id: otherwise7bbe
+              steps:
+                - log:
+                    id: log191d
+                    note: Invalid Log
+                    message: "Invalid input received: ${body}"
+                    loggingLevel: WARN
+                - setHeader:
+                    id: setHeaderdc82
+                    name: CamelHttpResponseCode
+                    expression:
+                      constant:
+                        id: constant9321
+                        expression: "400"
+                - setBody:
+                    id: setBody7c01
+                    expression:
+                      constant:
+                        id: constant3046
+                        expression: "{\"error\": \"Bad Request\", \"message\": \"Fields 'name' and 'city' are required\"}"
