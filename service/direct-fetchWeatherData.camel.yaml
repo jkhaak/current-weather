@@ -21,69 +21,37 @@
               simple:
                 id: simpleddc2
                 expression: ${body}
-        - setBody:
-            id: clearQueryBody
-            expression:
-              constant:
-                id: constant7ffb
+        - log:
+            id: logfe3b
+            message: Name is ${variable.queryObject[name]} and city is ${variable.queryObject[city]}
+            loggingLevel: INFO
+            logLanguage: simple
         - removeHeaders:
             id: removeQueryHeaders
             pattern: "*"
-        - log:
-            id: logfe3b
-            message: Name is ${variable.queryObject[name]} and City is ${variable.queryObject[city]}
-            loggingLevel: INFO
-            logLanguage: simple
         - toD:
             id: toDynamicGeocoding
-            uri: https://geocoding-api.open-meteo.com/v1/search?name=${variable[queryObject[city]]}&count=10&language=en&format=json
-        - setBody:
-            id: parseGeocodingData
-            expression:
-              jq:
-                id: jq6ae4
-                expression: ".results[0] | {city: .name, latitude, longitude}"
-        - unmarshal:
-            id: unmarshalGeoData
-            json:
-              id: json84a6
-              library: Jackson
+            uri: https://geocoding-api.open-meteo.com/v1/search?name=${variable.queryObject[city]}&count=10&language=en&format=json
         - setVariable:
             id: setVariableGeoData
             name: geoData
             expression:
-              simple:
-                id: simplec1e8
-                expression: ${body}
-        - setBody:
-            id: clearGeoDataBody
-            expression:
-              constant:
-                id: constant7ffb
+              jq:
+                id: jq747a
+                expression: ".results[0] | {city: .name, latitude, longitude}"
         - removeHeaders:
             id: removeGeoDataHeaders
             pattern: "*"
         - toD:
             id: toDynamicForecast
-            uri: https://api.open-meteo.com/v1/forecast?latitude=${variable.geoData[latitude]}&longitude=${variable.geoData[longitude]}&current_weather=true
-        - setBody:
-            id: parseForecastData
-            expression:
-              jq:
-                id: jqcfe3
-                expression: ".current_weather | { currentTemperature: .temperature, time }"
-        - unmarshal:
-            id: unmarshalForecastData
-            json:
-              id: json415a
-              library: Jackson
+            uri: https://api.open-meteo.com/v1/forecast?latitude=${jq(variable:geoData,.latitude)}&longitude=${jq(variable:geoData,.longitude)}&current_weather=true
         - setVariable:
             id: setVariableForecast
             name: forecast
             expression:
-              simple:
-                id: simple9c53
-                expression: ${body}
+              jq:
+                id: jq497e
+                expression: ".current_weather | { currentTemperature: .temperature, time }"
         - to:
             id: createResponse
             uri: velocity
