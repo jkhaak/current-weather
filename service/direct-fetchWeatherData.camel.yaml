@@ -23,6 +23,7 @@
                 expression: ${body}
         - log:
             id: logfe3b
+            note: Log query data
             message: Name is ${variable.queryObject[name]} and city is ${variable.queryObject[city]}
             loggingLevel: INFO
             logLanguage: simple
@@ -42,6 +43,12 @@
         - removeHeaders:
             id: removeGeoDataHeaders
             pattern: "*"
+        - log:
+            id: logForecastQuery
+            note: Log forecast query location
+            message: "Querying '${jq(variable:geoData, .city)}' (lat: ${jq(variable:geoData, .latitude)}, lon: ${jq(variable:geoData, .longitude)})"
+            loggingLevel: INFO
+            logLanguage: simple
         - toD:
             id: toDynamicForecast
             uri: https://api.open-meteo.com/v1/forecast?latitude=${jq(variable:geoData,.latitude)}&longitude=${jq(variable:geoData,.longitude)}&current_weather=true
