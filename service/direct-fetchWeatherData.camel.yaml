@@ -9,24 +9,69 @@
         name: fetchWeatherData
       steps:
         - unmarshal:
-            id: unmarshaldf93
+            id: unmarshalInputQuery
             json:
               id: jsonb073
               useDefaultObjectMapper: true
               library: Jackson
         - setVariable:
-            id: setVariablee0d4
+            id: setVariableQueryObject
             name: queryObject
             expression:
               simple:
                 id: simpleddc2
                 expression: ${body}
+        - setBody:
+            id: clearQueryBody
+            expression:
+              constant:
+                id: constant7ffb
+        - removeHeaders:
+            id: removeQueryHeaders
+            pattern: "*"
         - log:
             id: logfe3b
-            message: Name is ${variable.queryObject[name]} and City is ${variable[queryObject[city]]}
+            message: Name is ${variable.queryObject[name]} and City is ${variable.queryObject[city]}
             loggingLevel: INFO
             logLanguage: simple
-        - log:
-            id: logde16
-            message: ${body}
-            loggingLevel: INFO
+
+        - toD:
+            id: toDynamicGeocoding
+            uri: https://geocoding-api.open-meteo.com/v1/search?name=${variable[queryObject[city]]}&count=10&language=en&format=json
+        - setBody:
+            id: parseGeocodingData
+            expression:
+              jq:
+                id: jq6ae4
+                expression: .results[0] | {name, latitude, longitude}
+        - unmarshal:
+            id: unmarshalGeoData
+            json:
+              id: json84a6
+              library: Jackson
+        - setVariable:
+            id: setVariableGeoData
+            name: geoData
+            expression:
+              simple:
+                id: simplec1e8
+                expression: ${body}
+        - setBody:
+            id: clearGeoDataBody
+            expression:
+              constant:
+                id: constant7ffb
+        - removeHeaders:
+            id: removeGeoDataHeaders
+            pattern: "*"
+  
+        - toD:
+            id: toDynamicForecast
+            uri: https://api.open-meteo.com/v1/forecast?latitude=${variable.geoData[latitude]}&longitude=${variable.geoData[longitude]}&current_weather=true
+
+        - to:
+            id: debugLog
+            disabled: true
+            uri: log
+            parameters:
+              loggerName: DEBUG?showAll=true&multiline=true
