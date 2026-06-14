@@ -1,6 +1,6 @@
 {
     "name": "$variable.queryObject.name",
-    "city": "$variable.geoData.city",
+    "city": $variable.geoData.city,
     "currentTemperature": "$variable.forecast.currentTemperature",
-    "time": "$variable.forecast.time"
+    "time": $variable.forecast.time
 }
