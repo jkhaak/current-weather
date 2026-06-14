@@ -4,3 +4,5 @@
       - id: poste7e0
         path: process
         to: direct:fetchWeatherData
+        consumes: application/json
+        produces: application/json

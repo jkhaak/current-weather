@@ -8,11 +8,25 @@
       parameters:
         name: fetchWeatherData
       steps:
-        - poll:
-            id: to5eff
-            uri: https
-            parameters:
-              httpUri: https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current_weather=true
+        - unmarshal:
+            id: unmarshaldf93
+            json:
+              id: jsonb073
+              useDefaultObjectMapper: true
+              library: Jackson
+        - setVariable:
+            id: setVariablee0d4
+            name: queryObject
+            expression:
+              simple:
+                id: simpleddc2
+                expression: ${body}
         - log:
-            id: log12e0
-            message: body
+            id: logfe3b
+            message: Name is ${variable.queryObject[name]} and City is ${variable[queryObject[city]]}
+            loggingLevel: INFO
+            logLanguage: simple
+        - log:
+            id: logde16
+            message: ${body}
+            loggingLevel: INFO
